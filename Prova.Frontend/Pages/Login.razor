@@ -10,8 +10,9 @@
 
 @inject IUsuarioServices UsuarioServices
 
-<h1>Login BlazorApp</h1>
+<h1>Login Prova Micro</h1>
 
+<p><em>@textoTela</em></p>
 <EditForm Model="@loginModel" OnValidSubmit="@SubmitForm" OnInvalidSubmit="@HandleInvalidSubmit">
     <div class="alert @StatusClass">@StatusMessage</div>
 
@@ -21,7 +22,7 @@
     <div class="container">
         <div class="form-group">
             <label for="login">Login</label>
-            <InputText id="login" @bind-Value="@loginModel.Login" class="form-control"/>
+            <InputText id="login" @bind-Value="@loginModel.Login" class="form-control" />
             <ValidationMessage For="@(() => loginModel.Login)" />
         </div>
         <div class="form-group">
@@ -41,12 +42,15 @@
 
     private LoginModel loginModel = new LoginModel();
 
+    private string textoTela;
     public string Mensagem { get; set; } = "";
     private string StatusMessage;
     private string StatusClass;
 
     private async Task SubmitForm()
     {
+        textoTela = "Conectando, aguarde...";
+
         if (!string.IsNullOrEmpty(loginModel.Login) && !string.IsNullOrEmpty(loginModel.Password))
         {
             (UsuarioModel usuario, string mensagem) = await UsuarioServices.LoginAsync(loginModel.Login, loginModel.Password);
@@ -69,6 +73,8 @@
             StatusClass = "alert-info";
             StatusMessage = $"{DateTime.Now} {mensagem}";
         }
+
+        textoTela = string.Empty;
     }
 
     protected void HandleInvalidSubmit()
