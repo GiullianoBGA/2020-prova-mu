@@ -1,0 +1,129 @@
+﻿@page "/notasdecompra"
+
+@using Prova.Modelos
+@using Prova.Primitivos
+@using Prova.Frontend.Servicos.Interfaces
+
+@inject INotaDeCompraServices NotaDeCompraServices
+@inject TokenViewModel TokenViewModel
+
+<table width="100%" style="background:#0A2464;color:honeydew">
+    <tr>
+        <td width="20">&nbsp;</td>
+        <td>
+            <h2>Notas de Compras</h2>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2"></td>
+    </tr>
+</table>
+
+
+<form id="form">
+    <div class="form-group row">
+        <div class="col-lg-2">
+            <label for="data-inicio">Data Início:</label>
+            <input type="date" id="start" name="datainicial" class="form-control"
+                   @bind="@dataInicial"
+                   min="2020-01-01" max="2020-12-31" />
+        </div>
+        <div class="col-lg-2">
+            <label for="data-fim">Data Fim:</label>
+            <input type="date" id="start" name="datafinal" class="form-control"
+                   @bind="@dataFinal"
+                   min="2020-01-01" max="2020-12-31" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-lg-2">
+            <div class="btn btn-primary" id="btn-pesquisar" @onclick="@(async () => await Pesquisar())">
+                <span class="fas fa-search"></span>
+                Pesquisar
+            </div>
+        </div>
+    </div>
+</form>
+
+<p><em>@textoTela</em></p>
+@if (notasDeCompra == null)
+{
+}
+else if (!notasDeCompra.Any())
+{
+    <p><em>A consulta não retornou dados</em></p>
+}
+else
+{
+    <table class="table table-bordered table-hover table-striped">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th align=right>Desconto</th>
+                <th>Frete</th>
+                <th>Mercadorias</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Ação</th>
+            </tr>
+        </thead>
+        <tbody>            
+            @foreach (var nota in notasDeCompra)
+            {
+                <tr>
+                    <td>@nota.DataEmissao.ToShortDateString()</td>
+                    <td align=right>@nota.ValorDesconto.ToString("C")</td>
+                    <td align=right>@nota.ValorFrete.ToString("C")</td>
+                    <td align=right>@nota.ValorMercadorias.ToString("C")</td>
+                    <td align=right>@nota.ValorTotal.ToString("C")</td>
+                    <td>@(nota.Status ? "Aprovada" : "Pendente")</td>
+
+                    <td><button class="btn btn-primary" @onclick="@(async () => await ExecutarAcao(@nota.Id))" style="width:110px;">@textoBotao</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private string textoBotao;
+    private string textoTela;
+    private List<NotaDeCompraModel> notasDeCompra;
+    private long idUsuario;
+    private DateTime dataInicial = DateTime.Now.AddDays(-30);
+    private DateTime dataFinal = DateTime.Now;
+
+    protected override async Task OnInitializedAsync()
+    {
+        idUsuario = long.Parse(TokenViewModel.Token);
+    }
+
+    protected async Task CarregarTelaAsync()
+    {
+        AcaoUsuario acaoUsuario;
+
+        NotaDeCompraPaginaModel notasModel = await NotaDeCompraServices.ObterDadosAsync(idUsuario, dataInicial, dataFinal);
+
+        acaoUsuario = notasModel.AcaoUsuario;
+        notasDeCompra = notasModel.NotaDeCompraModels;
+
+        textoBotao = acaoUsuario == AcaoUsuario.Vistar ? "Vistar" : "Aprovar";
+    }
+
+    protected async Task ExecutarAcao(long idNotaCompra)
+    {
+        if (textoBotao == "Vistar")
+            await NotaDeCompraServices.RegistrarVistoAsync(idUsuario, idNotaCompra);
+        else
+            await NotaDeCompraServices.RegistrarAprovacaoAsync(idUsuario, idNotaCompra);
+
+        await CarregarTelaAsync();
+    }
+
+    protected async Task Pesquisar()
+    {
+        textoTela = "Carregando...";
+        await CarregarTelaAsync();
+        textoTela = string.Empty;
+    }
+}

@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Prova.Modelos\Prova.Modelos.csproj" />
+    <ProjectReference Include="..\Prova.Poco\Prova.Poco.csproj" />
+    <ProjectReference Include="..\Prova.Repositorio\Prova.Repositorio.csproj" />
+  </ItemGroup>
+
+</Project>
